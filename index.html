@@ -1,0 +1,251 @@
+<html><head><base href="https://weather-decision-tree-solver.example.com/">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Decision Tree Solver</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        #tree-container {
+            width: 100%;
+            height: 500px;
+            margin-top: 20px;
+        }
+        .node circle {
+            fill: #fff;
+            stroke: steelblue;
+            stroke-width: 3px;
+        }
+        .node text {
+            font: 12px sans-serif;
+        }
+        .link {
+            fill: none;
+            stroke: #ccc;
+            stroke-width: 2px;
+        }
+        .highlighted {
+            stroke: orange;
+            stroke-width: 4px;
+        }
+    </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1 class="mt-4 mb-4">Weather Decision Tree Solver</h1>
+            
+            <div class="row">
+                <div class="col-md-12">
+                    <h2>Weather Data</h2>
+                    <table class="table table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Outlook</th>
+                                <th>Temperature</th>
+                                <th>Humidity</th>
+                                <th>Windy</th>
+                                <th>Play</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>sunny</td><td>hot</td><td>high</td><td>false</td><td>no</td></tr>
+                            <tr><td>sunny</td><td>hot</td><td>high</td><td>true</td><td>no</td></tr>
+                            <tr><td>overcast</td><td>hot</td><td>high</td><td>false</td><td>yes</td></tr>
+                            <tr><td>rainy</td><td>mild</td><td>high</td><td>false</td><td>yes</td></tr>
+                            <tr><td>rainy</td><td>cool</td><td>normal</td><td>false</td><td>yes</td></tr>
+                            <tr><td>rainy</td><td>cool</td><td>normal</td><td>true</td><td>no</td></tr>
+                            <tr><td>overcast</td><td>cool</td><td>normal</td><td>true</td><td>yes</td></tr>
+                            <tr><td>sunny</td><td>mild</td><td>high</td><td>false</td><td>no</td></tr>
+                            <tr><td>sunny</td><td>cool</td><td>normal</td><td>false</td><td>yes</td></tr>
+                            <tr><td>rainy</td><td>mild</td><td>normal</td><td>false</td><td>yes</td></tr>
+                            <tr><td>sunny</td><td>mild</td><td>normal</td><td>true</td><td>yes</td></tr>
+                            <tr><td>overcast</td><td>mild</td><td>high</td><td>true</td><td>yes</td></tr>
+                            <tr><td>overcast</td><td>hot</td><td>normal</td><td>false</td><td>yes</td></tr>
+                            <tr><td>rainy</td><td>mild</td><td>high</td><td>true</td><td>no</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+    
+            <div class="row mt-4">
+                <div class="col-md-6 mx-auto">
+                    <h2>Interaction Panel</h2>
+                    <form id="weather-form" class="mb-4">
+                        <div class="mb-3">
+                            <label for="outlook" class="form-label">Outlook:</label>
+                            <select id="outlook" class="form-select">
+                                <option value="sunny">Sunny</option>
+                                <option value="overcast">Overcast</option>
+                                <option value="rainy">Rainy</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="temperature" class="form-label">Temperature:</label>
+                            <select id="temperature" class="form-select">
+                                <option value="hot">Hot</option>
+                                <option value="mild">Mild</option>
+                                <option value="cool">Cool</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="humidity" class="form-label">Humidity:</label>
+                            <select id="humidity" class="form-select">
+                                <option value="high">High</option>
+                                <option value="normal">Normal</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="windy" class="form-label">Windy:</label>
+                            <select id="windy" class="form-select">
+                                <option value="true">Yes</option>
+                                <option value="false">No</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Predict</button>
+                    </form>
+                    <div id="prediction" class="alert alert-info" style="display: none;"></div>
+                </div>
+            </div>
+    
+            <div class="row mt-4">
+                <div class="col-md-12">
+                    <h2>Decision Tree</h2>
+                    <div id="tree-container"></div>
+                </div>
+            </div>
+        </div>
+    
+        <script>
+            const treeData = {
+                name: "Outlook",
+                children: [
+                    {
+                        name: "Sunny",
+                        children: [
+                            {
+                                name: "Humidity",
+                                children: [
+                                    { name: "High", children: [{ name: "No" }] },
+                                    { name: "Normal", children: [{ name: "Yes" }] }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        name: "Overcast",
+                        children: [{ name: "Yes" }]
+                    },
+                    {
+                        name: "Rainy",
+                        children: [
+                            {
+                                name: "Windy",
+                                children: [
+                                    { name: "False", children: [{ name: "Yes" }] },
+                                    { name: "True", children: [{ name: "No" }] }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            };
+    
+            const margin = { top: 20, right: 90, bottom: 30, left: 90 };
+            const width = 960 - margin.left - margin.right;
+            const height = 500 - margin.top - margin.bottom;
+    
+            const svg = d3.select("#tree-container").append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", `translate(${margin.left},${margin.top})`);
+    
+            const tree = d3.tree().size([height, width]);
+            const root = d3.hierarchy(treeData);
+            tree(root);
+    
+            const link = svg.selectAll(".link")
+                .data(root.links())
+                .enter().append("path")
+                .attr("class", "link")
+                .attr("d", d3.linkHorizontal()
+                    .x(d => d.y)
+                    .y(d => d.x));
+    
+            const node = svg.selectAll(".node")
+                .data(root.descendants())
+                .enter().append("g")
+                .attr("class", d => "node" + (d.children ? " node--internal" : " node--leaf"))
+                .attr("transform", d => `translate(${d.y},${d.x})`);
+    
+            node.append("circle")
+                .attr("r", 10);
+    
+            node.append("text")
+                .attr("dy", ".35em")
+                .attr("x", d => d.children ? -13 : 13)
+                .style("text-anchor", d => d.children ? "end" : "start")
+                .text(d => d.data.name);
+    
+            function highlightPath(outlook, humidity, windy) {
+                svg.selectAll(".link").classed("highlighted", false);
+                svg.selectAll(".node circle").attr("r", 10).style("fill", "#fff");
+    
+                let currentNode = root;
+                while (currentNode) {
+                    if (currentNode.data.name === "Outlook") {
+                        currentNode = currentNode.children.find(child => child.data.name.toLowerCase() === outlook);
+                    } else if (currentNode.data.name === "Humidity") {
+                        currentNode = currentNode.children.find(child => child.data.name.toLowerCase() === humidity);
+                    } else if (currentNode.data.name === "Windy") {
+                        currentNode = currentNode.children.find(child => child.data.name.toLowerCase() === windy);
+                    } else {
+                        break;
+                    }
+    
+                    if (currentNode) {
+                        const linkToParent = root.links().find(link => link.target === currentNode);
+                        if (linkToParent) {
+                            svg.select(`.link[d="${d3.linkHorizontal().x(d => d.y).y(d => d.x)(linkToParent)}"]`)
+                                .classed("highlighted", true);
+                        }
+                        svg.select(`.node[transform="translate(${currentNode.y},${currentNode.x})"] circle`)
+                            .attr("r", 12)
+                            .style("fill", "orange");
+                    }
+                }
+            }
+    
+            document.getElementById("weather-form").addEventListener("submit", function(e) {
+                e.preventDefault();
+                const outlook = document.getElementById("outlook").value;
+                const temperature = document.getElementById("temperature").value;
+                const humidity = document.getElementById("humidity").value;
+                const windy = document.getElementById("windy").value;
+    
+                let prediction = "";
+                if (outlook === "overcast") {
+                    prediction = "Yes";
+                } else if (outlook === "sunny" && humidity === "high") {
+                    prediction = "No";
+                } else if (outlook === "sunny" && humidity === "normal") {
+                    prediction = "Yes";
+                } else if (outlook === "rainy" && windy === "false") {
+                    prediction = "Yes";
+                } else if (outlook === "rainy" && windy === "true") {
+                    prediction = "No";
+                }
+    
+                document.getElementById("prediction").textContent = `Prediction: ${prediction}`;
+                document.getElementById("prediction").style.display = "block";
+    
+                highlightPath(outlook, humidity, windy);
+            });
+        </script>
+    
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    </body>
+    </html>
